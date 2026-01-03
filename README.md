@@ -7,7 +7,6 @@ Free, No ID verification Crypto2Crypto payment provider
 ```rust
 // setting up client
 let mut client = NPClient::new(config.api);
-client.set_auth(config.email, config.password);
 
 // creating options for your request
 let payment = PaymentOpts::new(100, "GBP", "BTC", "http://google.com/", &id, "test order");

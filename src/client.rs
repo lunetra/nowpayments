@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Display;
 
+use crate::response::conversion::AllConversions;
 use crate::response::currencies::FullCurrencies;
 use crate::response::currencies::SelectedCurrencies;
 use crate::response::payments::EstimatedPaymentAmount;
@@ -10,10 +11,6 @@ use crate::response::payouts::Payouts;
 use crate::response::status::Status;
 use crate::response::{conversion::SingleConversion, payments::Payment};
 use crate::response::{currencies::Currencies, payments::PaymentStatus};
-use crate::{
-    jwt::{JWTJson, JWT},
-    response::conversion::AllConversions,
-};
 use anyhow::{bail, Result};
 use reqwest::header;
 use serde_json::Value;
@@ -24,10 +21,6 @@ static USERAGENT: &str = concat!("rust/nowpayments/", "0.2.2");
 
 pub struct NPClient {
     base_url: &'static str,
-    email: Option<String>,
-    password: Option<String>,
-
-    jwt: JWT,
     client: reqwest::Client,
 }
 
@@ -43,9 +36,6 @@ impl NPClient {
                 .default_headers(headers)
                 .build()
                 .unwrap(),
-            email: None,
-            password: None,
-            jwt: JWT::new(),
         }
     }
 
@@ -60,25 +50,13 @@ impl NPClient {
                 .default_headers(headers)
                 .build()
                 .unwrap(),
-            email: None,
-            password: None,
-            jwt: JWT::new(),
         }
-    }
-
-    pub fn set_auth(&mut self, email: String, password: String) {
-        self.email = Some(email);
-        self.password = Some(password);
     }
 
     async fn get(&self, endpoint: impl ToString) -> Result<String> {
         let endpoint = format!("{}{}", self.base_url, endpoint.to_string());
 
-        let req = self
-            .client
-            .get(endpoint)
-            .bearer_auth(self.jwt.get().unwrap_or("".to_string()))
-            .build()?;
+        let req = self.client.get(endpoint).build()?;
 
         Ok(self.client.execute(req).await?.text().await?)
     }
@@ -91,12 +69,7 @@ impl NPClient {
     ) -> Result<String> {
         let endpoint = format!("{}{}", self.base_url, endpoint);
 
-        let req = self
-            .client
-            .post(endpoint)
-            .json(&data)
-            .bearer_auth(self.jwt.get().unwrap_or("".to_string()))
-            .build()?;
+        let req = self.client.post(endpoint).json(&data).build()?;
 
         // Print headers only (no body)
         tracing::debug!("{:#?}", req);
@@ -117,20 +90,6 @@ impl NPClient {
         tracing::debug!("{:#?}", body_json);
 
         Ok(body_str)
-    }
-
-    pub async fn authenticate(&mut self) -> Result<()> {
-        if self.email.is_none() || self.password.is_none() {
-            bail!("not set username or pass");
-        }
-        let mut json = HashMap::new();
-        json.insert("email", self.email.clone().unwrap());
-        json.insert("password", self.password.clone().unwrap());
-
-        let data = self.post("auth", json).await?;
-        let jwt: JWTJson = serde_json::from_str(&data)?;
-        self.jwt.set(jwt.token);
-        Ok(())
     }
 }
 
@@ -186,9 +145,6 @@ impl NPClient {
     }
 
     pub async fn get_payment_status(&self, payment_id: impl Display) -> Result<PaymentStatus> {
-        if self.jwt.is_expired() {
-            bail!("Expired jwt");
-        }
         let path = format!("payment/{}", payment_id);
         let req = self.get(path).await?;
 
@@ -204,9 +160,6 @@ impl NPClient {
         date_from: impl Display,
         date_to: impl Display,
     ) -> Result<Payment> {
-        if self.jwt.is_expired() {
-            bail!("Expired jwt");
-        }
         let path = format!(
             "payment/?limit={}&page={}&sortBy={}&orderBy={}&dateFrom={}&dateTo={}",
             limit, page, sort_by, order_by, date_from, date_to
@@ -296,9 +249,5 @@ impl NPClient {
         let x = self.post("payment", h).await?;
 
         Ok(serde_json::from_str(x.as_str())?)
-    }
-
-    pub fn get_jwt(&self) {
-        dbg!(&self.jwt);
     }
 }

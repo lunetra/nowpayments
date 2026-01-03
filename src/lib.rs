@@ -1,5 +1,4 @@
 pub mod client;
-pub mod jwt;
 pub mod response;
 
 #[cfg(test)]
@@ -16,8 +15,6 @@ mod test {
     struct Config {
         api: String,
         sandboxapi: String,
-        email: String,
-        password: String,
     }
 
     fn parse_config() -> Config {
@@ -25,9 +22,6 @@ mod test {
         return Config {
             api: var("NOWPAYMENTS_API_KEY").unwrap(),
             sandboxapi: var("NOWPAYMENTS_SANDBOX_API_KEY").unwrap(),
-
-            email: var("NOWPAYMENTS_EMAIL").unwrap_or("null".to_owned()),
-            password: var("NOWPAYMENTS_PASSWORD").unwrap_or("null".to_owned()),
         };
     }
 
@@ -104,9 +98,6 @@ mod test {
     async fn authentication() {
         let conf = parse_config();
         let mut c = client();
-        c.set_auth(conf.email, conf.password);
-        // panics if not error
-        c.authenticate().await.unwrap();
 
         c.get_payout_list().await.unwrap();
     }
