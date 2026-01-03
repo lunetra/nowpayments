@@ -1,6 +1,6 @@
 # NowPayments Rust Api
 
-Free, No ID verification Crypto2Crypto payment provider
+[NowPayments](https://nowpayments.io/) is a Free, No ID verification Crypto2Crypto payment provider.
 
 ## Usage
 

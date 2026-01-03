@@ -1,4 +1,5 @@
 pub mod client;
+pub mod jwt;
 pub mod response;
 
 #[cfg(test)]
@@ -13,26 +14,31 @@ mod test {
 
     #[derive(Deserialize, Serialize)]
     struct Config {
-        api: String,
-        sandboxapi: String,
+        api_key: String,
+        sandbox_api_key: String,
+        email: String,
+        password: String,
     }
 
     fn parse_config() -> Config {
         dotenvy::dotenv().unwrap();
         return Config {
-            api: var("NOWPAYMENTS_API_KEY").unwrap(),
-            sandboxapi: var("NOWPAYMENTS_SANDBOX_API_KEY").unwrap(),
+            api_key: var("NOWPAYMENTS_API_KEY").unwrap(),
+            sandbox_api_key: var("NOWPAYMENTS_SANDBOX_API_KEY").unwrap(),
+
+            email: var("NOWPAYMENTS_EMAIL").unwrap_or("null".to_owned()),
+            password: var("NOWPAYMENTS_PASSWORD").unwrap_or("null".to_owned()),
         };
     }
 
     fn client() -> NPClient {
         let config = parse_config();
-        NPClient::new(config.api.as_str())
+        NPClient::new(config.api_key.as_str())
     }
 
     fn sandbox_client() -> NPClient {
         let config = parse_config();
-        NPClient::new(config.sandboxapi.as_str())
+        NPClient::new_sandbox(config.sandbox_api_key.as_str())
     }
 
     #[test]
@@ -95,19 +101,27 @@ mod test {
     }
 
     #[tokio::test]
+    #[traced_test]
+    // WARNING: Method does not work on sandbox.
     async fn authentication() {
         let conf = parse_config();
         let mut c = client();
+        c.set_auth(conf.email, conf.password);
 
-        c.get_payout_list().await.unwrap();
+        // panics if not error
+        c.authenticate().await.unwrap();
+
+        // c.get_payout_list().await.unwrap();
     }
 
     #[tokio::test]
     #[traced_test]
+    // WARNING: Method does not work on sandbox.
     async fn create_payment() {
         let ipn_callback = "https://crocuda.com/";
         let payment = PaymentOpts::new(100, "GBP", "BTC", ipn_callback, "x", "test order");
 
+        // let mut c = client();
         let mut c = sandbox_client();
 
         c.create_payment(payment).await.unwrap();
