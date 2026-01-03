@@ -1,2 +1,10 @@
+# Rust
 target/
+
+
+# Nix
+/.direnv
+/result
+
+# Environment
 .env
