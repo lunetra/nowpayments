@@ -1,4 +1,3 @@
-use miniserde::json;
 use std::collections::HashMap;
 use std::fmt::Display;
 
@@ -17,6 +16,7 @@ use crate::{
 };
 use anyhow::{bail, Result};
 use reqwest::header;
+use serde_json::Value;
 
 static BASE_URL: &str = "https://api.nowpayments.io/v1/";
 static BASE_SANDBOX_URL: &str = "https://api-sandbox.nowpayments.io/v1/";
@@ -83,6 +83,7 @@ impl NPClient {
         Ok(self.client.execute(req).await?.text().await?)
     }
 
+    #[tracing::instrument(skip_all)]
     async fn post(
         &self,
         endpoint: impl Display,
@@ -97,7 +98,25 @@ impl NPClient {
             .bearer_auth(self.jwt.get().unwrap_or("".to_string()))
             .build()?;
 
-        Ok(self.client.execute(req).await?.text().await?)
+        // Print headers only (no body)
+        tracing::debug!("{:#?}", req);
+        if let Some(body) = req.body() {
+            let body_str = str::from_utf8(body.as_bytes().unwrap()).unwrap();
+            let body_json: Value = serde_json::from_str(body_str)?;
+            // Print body
+            tracing::debug!("{:#?}", body_json);
+        }
+
+        let response = self.client.execute(req).await?;
+        // Print headers only (no body)
+        tracing::debug!("{:#?}", response);
+
+        let body_str = response.text().await?;
+        let body_json: Value = serde_json::from_str(&body_str)?;
+        // Print body
+        tracing::debug!("{:#?}", body_json);
+
+        Ok(body_str)
     }
 
     pub async fn authenticate(&mut self) -> Result<()> {
@@ -109,7 +128,7 @@ impl NPClient {
         json.insert("password", self.password.clone().unwrap());
 
         let data = self.post("auth", json).await?;
-        let jwt: JWTJson = json::from_str(&data)?;
+        let jwt: JWTJson = serde_json::from_str(&data)?;
         self.jwt.set(jwt.token);
         Ok(())
     }
@@ -119,25 +138,25 @@ impl NPClient {
     pub async fn status(&self) -> Result<Status> {
         let req = self.get("status").await?;
 
-        Ok(json::from_str(req.as_str())?)
+        Ok(serde_json::from_str(req.as_str())?)
     }
 
     pub async fn get_currencies(&self) -> Result<Currencies> {
         let req = self.get("currencies").await?;
 
-        Ok(json::from_str(req.as_str())?)
+        Ok(serde_json::from_str(req.as_str())?)
     }
 
     pub async fn get_full_currencies(&self) -> Result<FullCurrencies> {
         let req = self.get("full-currencies").await?;
 
-        Ok(json::from_str(req.as_str())?)
+        Ok(serde_json::from_str(req.as_str())?)
     }
 
     pub async fn get_checked_currencies(&self) -> Result<SelectedCurrencies> {
         let req = self.get("merchant/coins").await?;
 
-        Ok(json::from_str(req.as_str())?)
+        Ok(serde_json::from_str(req.as_str())?)
     }
     // TODO
     pub async fn get_min_payment_amount(
@@ -148,7 +167,7 @@ impl NPClient {
         let path = format!("min-amount?currency_from={}&currency_to={}", from, to);
         let req = self.get(path).await?;
 
-        Ok(json::from_str(req.as_str())?)
+        Ok(serde_json::from_str(req.as_str())?)
     }
     // TODO
     pub async fn get_estimated_price(
@@ -163,7 +182,7 @@ impl NPClient {
         );
         let req = self.get(path).await?;
 
-        Ok(json::from_str(req.as_str())?)
+        Ok(serde_json::from_str(req.as_str())?)
     }
 
     pub async fn get_payment_status(&self, payment_id: impl Display) -> Result<PaymentStatus> {
@@ -173,7 +192,7 @@ impl NPClient {
         let path = format!("payment/{}", payment_id);
         let req = self.get(path).await?;
 
-        Ok(json::from_str(req.as_str())?)
+        Ok(serde_json::from_str(req.as_str())?)
     }
 
     pub async fn get_list_of_payments(
@@ -194,27 +213,27 @@ impl NPClient {
         );
         let req = self.get(path).await?;
 
-        Ok(json::from_str(req.as_str())?)
+        Ok(serde_json::from_str(req.as_str())?)
     }
 
     // TODO
     pub async fn get_balance(&self) -> Result<Status> {
         let req = self.get("balance").await?;
 
-        Ok(json::from_str(req.as_str())?)
+        Ok(serde_json::from_str(req.as_str())?)
     }
 
     pub async fn get_payout_status(&self, payout_id: impl Display) -> Result<Payouts> {
         let path = format!("payout/{}", payout_id);
         let req = self.get(path).await?;
 
-        Ok(json::from_str(req.as_str())?)
+        Ok(serde_json::from_str(req.as_str())?)
     }
 
     pub async fn get_payout_list(&self) -> Result<AllPayouts> {
         let req = self.get("payout").await?;
 
-        Ok(json::from_str(req.as_str())?)
+        Ok(serde_json::from_str(req.as_str())?)
     }
 
     pub async fn get_conversion_status(
@@ -224,14 +243,14 @@ impl NPClient {
         let path = format!("conversion/{}", conversion_id);
         let req = self.get(path).await?;
 
-        Ok(json::from_str(req.as_str())?)
+        Ok(serde_json::from_str(req.as_str())?)
     }
 
     pub async fn get_conversion_list(&self) -> Result<AllConversions> {
         let path = "conversion".to_string();
         let req = self.get(path).await?;
 
-        Ok(json::from_str(req.as_str())?)
+        Ok(serde_json::from_str(req.as_str())?)
     }
 }
 
@@ -276,7 +295,7 @@ impl NPClient {
 
         let x = self.post("payment", h).await?;
 
-        Ok(json::from_str(x.as_str())?)
+        Ok(serde_json::from_str(x.as_str())?)
     }
 
     pub fn get_jwt(&self) {

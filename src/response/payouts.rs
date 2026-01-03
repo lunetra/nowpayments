@@ -1,4 +1,4 @@
-use miniserde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 pub type Payouts = Vec<Payout>;
 

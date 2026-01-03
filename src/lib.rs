@@ -5,11 +5,12 @@ pub mod response;
 #[cfg(test)]
 mod test {
     use std::env::var;
+    use tracing_test::traced_test;
 
     use crate::client::PaymentOpts;
 
     use super::client::NPClient;
-    use miniserde::{Deserialize, Serialize};
+    use serde::{Deserialize, Serialize};
 
     #[derive(Deserialize, Serialize)]
     struct Config {
@@ -22,11 +23,12 @@ mod test {
     fn parse_config() -> Config {
         dotenvy::dotenv().unwrap();
         return Config {
-            api: var("NP_KEY").unwrap(),
-            email: var("NP_EMAIL").unwrap(),
-            sandboxapi: var("NP_SANDBOX_KEY").unwrap(),
-            password: var("NP_PASS").unwrap(),
-        } 
+            api: var("NOWPAYMENTS_API_KEY").unwrap(),
+            sandboxapi: var("NOWPAYMENTS_SANDBOX_API_KEY").unwrap(),
+
+            email: var("NOWPAYMENTS_EMAIL").unwrap_or("null".to_owned()),
+            password: var("NOWPAYMENTS_PASSWORD").unwrap_or("null".to_owned()),
+        };
     }
 
     fn client() -> NPClient {
@@ -110,10 +112,12 @@ mod test {
     }
 
     #[tokio::test]
+    #[traced_test]
     async fn create_payment() {
-        let payment = PaymentOpts::new(100, "GBP", "BTC", "http://google.com/", "x", "test order");
+        let ipn_callback = "https://crocuda.com/";
+        let payment = PaymentOpts::new(100, "GBP", "BTC", ipn_callback, "x", "test order");
 
-        let mut c = client();
+        let mut c = sandbox_client();
 
         c.create_payment(payment).await.unwrap();
     }

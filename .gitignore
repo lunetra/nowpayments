@@ -1,10 +1,11 @@
 # Rust
 target/
 
-
 # Nix
+flake.lock
 /.direnv
 /result
 
 # Environment
 .env
+.env.prod

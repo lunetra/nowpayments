@@ -1,6 +1,6 @@
 // use anyhow::{bail, Result};
 // use nowpayments::client::*;
-// use miniserde::{Deserialize, Serialize};
+// use serde::{Deserialize, Serialize};
 
 
 // #[derive(Deserialize, Serialize)]
