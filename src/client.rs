@@ -80,7 +80,17 @@ impl NPClient {
             .bearer_auth(self.jwt.get().unwrap_or("".to_string()))
             .build()?;
 
-        Ok(self.client.execute(req).await?.text().await?)
+        let response = self.client.execute(req).await?;
+        // Print headers only (no body)
+        tracing::debug!("{:#?}", response);
+
+        let body_str = response.text().await?;
+        let body_json: Value = serde_json::from_str(&body_str)?;
+        // Print body
+        tracing::debug!("{:#?}", body_json);
+        tracing::trace!("{}", serde_json::to_string_pretty(&body_json)?);
+
+        Ok(body_str)
     }
 
     #[tracing::instrument(skip_all)]
@@ -199,6 +209,7 @@ impl NPClient {
         Ok(serde_json::from_str(req.as_str())?)
     }
 
+    #[tracing::instrument(skip_all)]
     pub async fn get_payment_status(&self, payment_id: impl Display) -> Result<PaymentStatus> {
         if self.jwt.is_expired() {
             bail!("Expired jwt");
@@ -269,12 +280,12 @@ impl NPClient {
 }
 
 pub struct PaymentOpts {
-    price_amount: String,
-    price_currency: String,
-    pay_currency: String,
-    ipn_callback_url: String,
-    order_id: String,
-    order_description: String,
+    pub price_amount: String,
+    pub price_currency: String,
+    pub pay_currency: String,
+    pub ipn_callback_url: String,
+    pub order_id: String,
+    pub order_description: String,
 }
 
 impl PaymentOpts {

@@ -104,8 +104,9 @@ mod test {
     #[traced_test]
     // WARNING: Method does not work on sandbox.
     async fn authentication() {
-        let conf = parse_config();
         let mut c = client();
+
+        let conf = parse_config();
         c.set_auth(conf.email, conf.password);
 
         // panics if not error
@@ -118,12 +119,30 @@ mod test {
     #[traced_test]
     // WARNING: Method does not work on sandbox.
     async fn create_payment() {
-        let ipn_callback = "https://crocuda.com/";
+        let ipn_callback = "https://test.com/";
         let payment = PaymentOpts::new(100, "GBP", "BTC", ipn_callback, "x", "test order");
 
-        // let mut c = client();
-        let mut c = sandbox_client();
+        let mut c = client();
+        // let mut c = sandbox_client();
 
         c.create_payment(payment).await.unwrap();
+    }
+
+    #[tokio::test]
+    #[traced_test]
+    // WARNING: Method does not work on sandbox.
+    async fn get_payment_status() {
+        let ipn_callback = "https://test.com/";
+        let payment = PaymentOpts::new(100, "GBP", "BTC", ipn_callback, "x", "test order");
+
+        let mut c = client();
+
+        let conf = parse_config();
+        c.set_auth(conf.email, conf.password);
+
+        // panics if not error
+        c.authenticate().await.unwrap();
+
+        c.get_payment_status("x").await.unwrap();
     }
 }
