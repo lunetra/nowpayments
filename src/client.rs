@@ -1,15 +1,20 @@
+use bon::bon;
+use rust_decimal::{prelude::FromPrimitive, Decimal};
 use std::collections::HashMap;
 use std::fmt::Display;
 
-use crate::response::currencies::FullCurrencies;
-use crate::response::currencies::SelectedCurrencies;
+use crate::response;
+use crate::response::conversion::SingleConversion;
+use crate::response::currencies::{Currencies, FullCurrencies, SelectedCurrencies};
 use crate::response::payments::EstimatedPaymentAmount;
 use crate::response::payments::MinPaymentAmount;
 use crate::response::payouts::AllPayouts;
 use crate::response::payouts::Payouts;
 use crate::response::status::Status;
-use crate::response::{conversion::SingleConversion, payments::Payment};
-use crate::response::{currencies::Currencies, payments::PaymentStatus};
+
+// use crate::response::{currencies::Currencies, payments::Payment};
+use crate::better::{currencies::Currency, payments::Payment};
+
 use crate::{
     jwt::{JWTJson, JWT},
     response::conversion::AllConversions,
@@ -209,8 +214,9 @@ impl NPClient {
         Ok(serde_json::from_str(req.as_str())?)
     }
 
+    /// Return payment and its status
     #[tracing::instrument(skip_all)]
-    pub async fn get_payment_status(&self, payment_id: impl Display) -> Result<PaymentStatus> {
+    pub async fn get_payment(&self, payment_id: u64) -> Result<Payment> {
         if self.jwt.is_expired() {
             bail!("Expired jwt");
         }
@@ -280,30 +286,36 @@ impl NPClient {
 }
 
 pub struct PaymentOpts {
-    pub price_amount: String,
-    pub price_currency: String,
-    pub pay_currency: String,
+    pub price_amount: Decimal,
+    pub price_currency: Currency,
+    pub pay_currency: Currency,
     pub ipn_callback_url: String,
     pub order_id: String,
     pub order_description: String,
 }
 
+#[bon]
 impl PaymentOpts {
+    #[builder]
     pub fn new(
-        price_amount: u32,
-        price_currency: impl Display,
-        pay_currency: impl Display,
-        ipn_callback_url: impl Display,
-        order_id: impl Display,
-        order_description: impl Display,
+        price_amount: f64,
+        price_currency: Currency,
+        pay_currency: Currency,
+        ipn_callback_url: &str,
+        order_id: &str,
+        order_description: Option<&str>,
     ) -> Self {
+        let order_description = match order_description {
+            Some(v) => v.to_string(),
+            None => String::new(),
+        };
         PaymentOpts {
-            price_amount: price_amount.to_string(),
-            price_currency: price_currency.to_string(),
-            pay_currency: pay_currency.to_string(),
+            price_amount: Decimal::from_f64(price_amount).unwrap(),
+            price_currency,
+            pay_currency,
             ipn_callback_url: ipn_callback_url.to_string(),
             order_id: order_id.to_string(),
-            order_description: order_description.to_string(),
+            order_description: order_description,
         }
     }
 }
@@ -311,16 +323,19 @@ impl PaymentOpts {
 impl NPClient {
     pub async fn create_payment(&self, opts: PaymentOpts) -> Result<Payment> {
         let mut h = HashMap::new();
-        h.insert("price_amount", opts.price_amount.clone());
-        h.insert("price_currency", opts.price_currency.clone());
-        h.insert("pay_currency", opts.pay_currency.clone());
+
+        h.insert("price_amount", opts.price_amount.clone().to_string());
+        h.insert("price_currency", opts.price_currency.clone().to_string());
+        h.insert("pay_currency", opts.pay_currency.clone().to_string());
         h.insert("ipn_callback_url", opts.ipn_callback_url.clone());
         h.insert("order_id", opts.order_id.clone());
         h.insert("order_description", opts.order_description.clone());
 
         let x = self.post("payment", h).await?;
+        let payment: response::payments::Payment = serde_json::from_str(x.as_str())?;
+        let payment: Payment = payment.into();
 
-        Ok(serde_json::from_str(x.as_str())?)
+        Ok(payment)
     }
 
     pub fn get_jwt(&self) {

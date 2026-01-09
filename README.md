@@ -9,7 +9,17 @@
 let mut client = NPClient::new(config.api);
 
 // creating options for your request
+// deprecated
 let payment = PaymentOpts::new(100, "GBP", "BTC", "http://google.com/", &id, "test order");
+// new
+let payment = PaymentOpts::builder()
+    .price_amount(100.0)
+    .price_currency(Currency::USD)
+    .pay_currency(Currency::XMR")
+    .order_id("my_order_0")
+    .order_description("my test order")
+    .ipn_callback_url("https://test.com/")
+    .build();
 
 // have to create a new JWT every 5 minutes for nowpayments
 client.authenticate().await?;
@@ -38,3 +48,7 @@ for the great code quality.
 I just wanted to have more verbose errors to debug some http requests,
 so I can ship this dependency to production.
 This means longer compile times, but better live debugging.
+
+## TODO
+
+[ ]: Create error enum for when http request returns an error.

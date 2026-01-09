@@ -1,3 +1,4 @@
+pub mod better;
 pub mod client;
 pub mod jwt;
 pub mod response;
@@ -7,6 +8,7 @@ mod test {
     use std::env::var;
     use tracing_test::traced_test;
 
+    use crate::better::currencies::Currency;
     use crate::client::PaymentOpts;
 
     use super::client::NPClient;
@@ -61,6 +63,7 @@ mod test {
     }
 
     #[tokio::test]
+    #[traced_test]
     async fn get_currencies() {
         let mut c = client();
 
@@ -69,6 +72,7 @@ mod test {
     }
 
     #[tokio::test]
+    #[traced_test]
     async fn get_full_currencies() {
         let mut c = client();
 
@@ -119,8 +123,14 @@ mod test {
     #[traced_test]
     // WARNING: Method does not work on sandbox.
     async fn create_payment() {
-        let ipn_callback = "https://test.com/";
-        let payment = PaymentOpts::new(100, "GBP", "BTC", ipn_callback, "x", "test order");
+        let payment = PaymentOpts::builder()
+            .price_amount(100.0)
+            .price_currency(Currency::USD)
+            .pay_currency(Currency::XMR)
+            .order_id("my_order_0")
+            .order_description("my test order")
+            .ipn_callback_url("https://test.com/")
+            .build();
 
         let mut c = client();
         // let mut c = sandbox_client();
@@ -131,9 +141,16 @@ mod test {
     #[tokio::test]
     #[traced_test]
     // WARNING: Method does not work on sandbox.
-    async fn get_payment_status() {
+    async fn get_payment() {
         let ipn_callback = "https://test.com/";
-        let payment = PaymentOpts::new(100, "GBP", "BTC", ipn_callback, "x", "test order");
+        let payment = PaymentOpts::builder()
+            .price_amount(100.0)
+            .price_currency(Currency::USD)
+            .pay_currency(Currency::XMR)
+            .order_id("my_order_0")
+            .order_description("my test order")
+            .ipn_callback_url("https://test.com/")
+            .build();
 
         let mut c = client();
 
@@ -143,6 +160,6 @@ mod test {
         // panics if not error
         c.authenticate().await.unwrap();
 
-        c.get_payment_status("x").await.unwrap();
+        c.get_payment(1).await.unwrap();
     }
 }
