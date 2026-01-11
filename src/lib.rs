@@ -1,47 +1,26 @@
 pub mod better;
+pub use better::*;
 
 pub mod client;
+pub use client::*;
+
 pub mod jwt;
 pub mod response;
 
 #[cfg(test)]
 mod test {
-    use std::env::var;
     use tracing_test::traced_test;
 
+    use super::client::{EnvConfig, NPClient};
     use crate::better::currencies::Currency;
     use crate::client::PaymentOpts;
 
-    use super::client::NPClient;
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Deserialize, Serialize)]
-    struct Config {
-        api_key: String,
-        sandbox_api_key: String,
-        email: String,
-        password: String,
-    }
-
-    fn parse_config() -> Config {
-        dotenvy::dotenv().unwrap();
-        return Config {
-            api_key: var("NOWPAYMENTS_API_KEY").unwrap(),
-            sandbox_api_key: var("NOWPAYMENTS_SANDBOX_API_KEY").unwrap(),
-
-            email: var("NOWPAYMENTS_EMAIL").unwrap_or("null".to_owned()),
-            password: var("NOWPAYMENTS_PASSWORD").unwrap_or("null".to_owned()),
-        };
-    }
-
     fn client() -> NPClient {
-        let config = parse_config();
-        NPClient::new(config.api_key.as_str())
+        EnvConfig::client()
     }
 
     fn sandbox_client() -> NPClient {
-        let config = parse_config();
-        NPClient::new_sandbox(config.sandbox_api_key.as_str())
+        EnvConfig::sandbox_client()
     }
 
     #[test]
@@ -111,8 +90,8 @@ mod test {
     async fn authentication() {
         let mut c = client();
 
-        let conf = parse_config();
-        c.set_auth(conf.email, conf.password);
+        let config = EnvConfig::parse();
+        c.set_auth(config.email, config.password);
 
         // panics if not error
         c.authenticate().await.unwrap();
@@ -155,8 +134,8 @@ mod test {
 
         let mut c = client();
 
-        let conf = parse_config();
-        c.set_auth(conf.email, conf.password);
+        let config = EnvConfig::parse();
+        c.set_auth(config.email, config.password);
 
         // panics if not error
         c.authenticate().await.unwrap();

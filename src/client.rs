@@ -1,7 +1,12 @@
 use bon::bon;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Display;
+
+// Env vars
+use dotenvy;
+use std::env::var;
 
 use crate::response;
 use crate::response::conversion::SingleConversion;
@@ -26,6 +31,37 @@ use serde_json::Value;
 static BASE_URL: &str = "https://api.nowpayments.io/v1/";
 static BASE_SANDBOX_URL: &str = "https://api-sandbox.nowpayments.io/v1/";
 static USERAGENT: &str = concat!("rust/nowpayments/", "0.2.3");
+
+/// NowPayments client configuration from environment variables.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct EnvConfig {
+    pub api_key: String,
+    pub sandbox_api_key: String,
+    pub email: String,
+    pub password: String,
+}
+impl EnvConfig {
+    pub fn parse() -> Self {
+        dotenvy::dotenv().unwrap();
+        Self {
+            api_key: var("NOWPAYMENTS_API_KEY").unwrap(),
+            sandbox_api_key: var("NOWPAYMENTS_SANDBOX_API_KEY").unwrap(),
+
+            email: var("NOWPAYMENTS_EMAIL").unwrap_or("null".to_owned()),
+            password: var("NOWPAYMENTS_PASSWORD").unwrap_or("null".to_owned()),
+        }
+    }
+    /// Generate a ready to use client from local environment variables.
+    pub fn client() -> NPClient {
+        let config = Self::parse();
+        NPClient::new(config.api_key.as_str())
+    }
+    /// Generate a ready to use client from local environment variables.
+    pub fn sandbox_client() -> NPClient {
+        let config = Self::parse();
+        NPClient::new_sandbox(config.api_key.as_str())
+    }
+}
 
 pub struct NPClient {
     base_url: &'static str,
