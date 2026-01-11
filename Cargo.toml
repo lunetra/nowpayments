@@ -19,6 +19,7 @@ serde_json = { version = "1.0.148", features = ["preserve_order"] }
 strum = { version = "0.27.2", features = ["derive"] }
 tracing = { version = "0.1.44", features = ["async-await"] }
 tracing-test = "0.2.5"
+uuid = { version = "1.19.0", features = ["v4"] }
 
 [dev-dependencies]
 dotenvy = { version = "0.15.7", features = [] }

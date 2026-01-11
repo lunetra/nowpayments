@@ -1,4 +1,4 @@
-use bon::bon;
+use bon::{bon, builder};
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -199,6 +199,7 @@ impl NPClient {
     }
 }
 
+#[bon]
 impl NPClient {
     pub async fn status(&self) -> Result<Status> {
         let req = self.get("status").await?;
@@ -226,24 +227,32 @@ impl NPClient {
     // TODO
     pub async fn get_min_payment_amount(
         &self,
-        from: impl Display,
-        to: impl Display,
+        from: Currency,
+        to: Currency,
     ) -> Result<MinPaymentAmount> {
-        let path = format!("min-amount?currency_from={}&currency_to={}", from, to);
+        let path = format!(
+            "min-amount?currency_from={}&currency_to={}",
+            from.cg_id(),
+            to.cg_id()
+        );
         let req = self.get(path).await?;
 
         Ok(serde_json::from_str(req.as_str())?)
     }
-    // TODO
-    pub async fn get_estimated_price(
+
+    // Call to the /get_estimated_price API endpoint
+    #[builder(finish_fn = get)]
+    pub async fn price(
         &self,
-        amount: impl Display,
-        from: impl Display,
-        to: impl Display,
+        amount: f64,
+        from: Currency,
+        to: Currency,
     ) -> Result<EstimatedPaymentAmount> {
         let path = format!(
             "estimate?amount={}&currency_from={}&currency_to={}",
-            amount, from, to
+            Decimal::from_f64(amount).unwrap(),
+            from.cg_id(),
+            to.cg_id()
         );
         let req = self.get(path).await?;
 

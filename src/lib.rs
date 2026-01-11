@@ -73,15 +73,21 @@ mod test {
         let mut c = client();
 
         // panics if not error
-        c.get_min_payment_amount("eth", "btc").await.unwrap();
+        c.get_min_payment_amount(Currency::ETH, Currency::BTC)
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
     async fn get_estimate_price() {
         let mut c = client();
-
         // panics if not error
-        c.get_estimated_price(2000, "btc", "eth").await.unwrap();
+        c.price()
+            .amount(2000.0)
+            .from(Currency::BTC)
+            .to(Currency::ETH)
+            .get()
+            .await;
     }
 
     #[tokio::test]
