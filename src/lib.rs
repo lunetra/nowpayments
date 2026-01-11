@@ -1,4 +1,5 @@
 pub mod better;
+
 pub mod client;
 pub mod jwt;
 pub mod response;
