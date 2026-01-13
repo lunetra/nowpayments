@@ -3,6 +3,7 @@ pub use client::*;
 
 pub mod jwt;
 pub mod response;
+pub use response::{Currency, Payment, Status};
 
 #[cfg(test)]
 mod test {
