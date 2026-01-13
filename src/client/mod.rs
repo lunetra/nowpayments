@@ -11,10 +11,14 @@ use std::fmt::Display;
 use dotenvy;
 use std::env::var;
 
-use crate::response::conversion::SingleConversion;
+use crate::response::{
+    conversion::SingleConversion,
+    payments::Status,
+    status::{ApiStatus, RawApiStatus},
+};
+
 use crate::response::payments::EstimatedPaymentAmount;
 use crate::response::payments::MinPaymentAmount;
-use crate::response::status::Status;
 
 use crate::response::{currencies::Currency, payments::Payment};
 
@@ -104,30 +108,18 @@ impl Client {
 }
 
 impl Client {
-    pub async fn status(&self) -> Result<Status> {
-        let req = self.get("status").await?;
-
-        Ok(serde_json::from_str(req.as_str())?)
+    pub async fn status(&self) -> Result<ApiStatus> {
+        let res = self.get("status").await?;
+        let status: RawApiStatus = serde_json::from_str(res.as_str())?;
+        let status: ApiStatus = status.into();
+        Ok(status)
     }
+}
+
+impl Client {
     // TODO
     pub async fn get_balance(&self) -> Result<Status> {
         let req = self.get("balance").await?;
-
-        Ok(serde_json::from_str(req.as_str())?)
-    }
-
-    // TODO
-    pub async fn get_min_payment_amount(
-        &self,
-        from: Currency,
-        to: Currency,
-    ) -> Result<MinPaymentAmount> {
-        let path = format!(
-            "min-amount?currency_from={}&currency_to={}",
-            from.cg_id(),
-            to.cg_id()
-        );
-        let req = self.get(&path).await?;
 
         Ok(serde_json::from_str(req.as_str())?)
     }

@@ -1,9 +1,44 @@
-use super::{Currency, Status};
+use super::Currency;
 
 use chrono::NaiveDateTime;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
+
+#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+pub enum Status {
+    #[default]
+    Unknown,
+    Dummy,
+    Waiting,
+    Confirming,
+    Confirmed,
+    Sending,
+    PartiallyPaid,
+    Finished,
+    Failed,
+    Refunded,
+    Expired,
+}
+impl FromStr for Status {
+    type Err = std::io::Error;
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        let res = match value {
+            "waiting" => Self::Waiting,
+            "confirming" => Self::Confirming,
+            "confirmed" => Self::Confirmed,
+            "sending" => Self::Sending,
+            "partially_paid" => Self::PartiallyPaid,
+            "finished" => Self::Finished,
+            "failed" => Self::Failed,
+            "refunded" => Self::Refunded,
+            "expired" => Self::Expired,
+            "dummy" => Self::Dummy,
+            _ => Self::Unknown,
+        };
+        Ok(res)
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MinPaymentAmount {
@@ -36,6 +71,18 @@ pub struct RawPayment {
     // Dates
     pub created_at: String,
     pub updated_at: String,
+}
+
+/// Response from the /create-payment endpoint
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RawPayments {
+    data: Vec<RawPayment>,
+}
+impl From<RawPayments> for Vec<Payment> {
+    fn from(value: RawPayments) -> Self {
+        let res: Vec<Payment> = value.data.iter().map(|e| e.to_owned().into()).collect();
+        res
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]

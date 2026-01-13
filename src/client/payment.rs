@@ -1,6 +1,11 @@
 use super::Client;
-use crate::response::{payments::RawPayment, Currency, Payment, Status};
+use crate::response::{
+    payments::{RawPayment, RawPayments, Status},
+    Currency, Payment,
+};
 use chrono::{NaiveDateTime, Utc};
+use convert_case::{Case, Casing};
+use std::fmt;
 
 use bon::bon;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
@@ -77,16 +82,88 @@ impl PaymentMethods<'_> {
     }
 }
 
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
+pub enum SortingField {
+    #[default]
+    CreatedAt,
+    PaymentId,
+    PaymentStatus,
+    PayAddress,
+    PriceAmount,
+    PriceCurrency,
+    PayAmount,
+    PayCurrency,
+    ActuallyPaid,
+    OrderId,
+    OrderDescription,
+    PurchaseId,
+    OutcomeAmount,
+    OutcomeCurrency,
+}
+impl fmt::Display for SortingField {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = format!("{:?}", self);
+        write!(f, "{}", name.to_case(Case::Snake))
+    }
+}
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
+pub enum OrderDirection {
+    #[default]
+    Desc,
+    Asc,
+}
+impl fmt::Display for OrderDirection {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = format!("{:?}", self);
+        write!(f, "{}", name.to_case(Case::Snake))
+    }
+}
+
+#[bon]
+impl PaymentMethods<'_> {
+    #[builder(finish_fn = get)]
+    #[tracing::instrument(skip_all)]
+    /// Return an existing payment state.
+    pub async fn all(
+        &self,
+        limit: u64, // 1 to 500
+        page: u64,  // page count from 0 to n
+        sort_by: SortingField,
+        order_by: OrderDirection,
+        date_from: NaiveDateTime,
+        date_to: NaiveDateTime,
+    ) -> Result<Vec<Payment>> {
+        let client = self.client;
+        if client.jwt.is_expired() {
+            bail!("Expired jwt");
+        }
+        let from = date_from.format("%Y-%m-%d");
+        let to = date_to.format("%Y-%m-%d");
+        let path =
+            format!("payment/?limit={limit}&page={page}&sortBy={sort_by}&orderBy={order_by}&dateFrom={from}&date_to={to}",);
+
+        let res: String = self.client.get(&path).await?;
+        let payments: RawPayments = serde_json::from_str(res.as_str())?;
+        let payment: Vec<Payment> = payments.into();
+        Ok(payment)
+    }
+}
+
 pub struct MockMethods<'a> {
-    payment: MockPaymentMethods<'a>,
+    client: &'a Client,
 }
 pub struct MockPaymentMethods<'a> {
     client: &'a Client,
 }
 impl Client {
-    fn mock(&self) -> MockMethods<'_> {
-        MockMethods {
-            payment: MockPaymentMethods { client: &self },
+    pub fn mock(&self) -> MockMethods<'_> {
+        MockMethods { client: &self }
+    }
+}
+impl MockMethods<'_> {
+    pub fn payment(&self) -> MockPaymentMethods<'_> {
+        MockPaymentMethods {
+            client: self.client,
         }
     }
 }

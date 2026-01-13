@@ -37,6 +37,7 @@ impl CurrenciesMethods<'_> {
         Ok(serde_json::from_str(req.as_str())?)
     }
 
+    /// Get checked currencies.
     #[builder(finish_fn = get)]
     pub async fn allowed(&self) -> Result<SelectedCurrencies> {
         let client = self.client;
@@ -62,5 +63,19 @@ impl CurrenciesMethods<'_> {
         let req = client.get(&path).await?;
 
         Ok(serde_json::from_str(req.as_str())?)
+    }
+
+    // Get minimal payment amount.
+    #[builder(finish_fn = get)]
+    pub async fn min_amount(&self, from: Currency, to: Currency) -> Result<MinPaymentAmount> {
+        let path = format!(
+            "min-amount?currency_from={}&currency_to={}",
+            from.cg_id(),
+            to.cg_id()
+        );
+        let client = self.client;
+        let res = client.get(&path).await?;
+
+        Ok(serde_json::from_str(res.as_str())?)
     }
 }

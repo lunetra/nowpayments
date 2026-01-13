@@ -1,42 +1,26 @@
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 
-#[derive(Serialize, Deserialize)]
-pub struct RawStatus {
+#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct RawApiStatus {
     pub message: String,
 }
-
-#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
-pub enum Status {
+#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ApiStatus {
     #[default]
     Unknown,
-    Dummy,
-    Waiting,
-    Confirming,
-    Confirmed,
-    Sending,
-    PartiallyPaid,
-    Finished,
-    Failed,
-    Refunded,
-    Expired,
+    Running,
 }
-impl FromStr for Status {
-    type Err = std::io::Error;
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        let res = match value {
-            "waiting" => Self::Waiting,
-            "confirming" => Self::Confirming,
-            "confirmed" => Self::Confirmed,
-            "sending" => Self::Sending,
-            "partially_paid" => Self::PartiallyPaid,
-            "finished" => Self::Finished,
-            "failed" => Self::Failed,
-            "refunded" => Self::Refunded,
-            "expired" => Self::Expired,
-            "dummy" => Self::Dummy,
+impl From<RawApiStatus> for ApiStatus {
+    fn from(value: RawApiStatus) -> Self {
+        let res = match value.message.as_str() {
+            "OK" => Self::Running,
             _ => Self::Unknown,
         };
-        Ok(res)
+        res
     }
+}
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct RawStatus {
+    pub message: String,
 }
