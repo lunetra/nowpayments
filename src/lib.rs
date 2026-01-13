@@ -1,6 +1,3 @@
-pub mod better;
-pub use better::*;
-
 pub mod client;
 pub use client::*;
 
@@ -11,15 +8,16 @@ pub mod response;
 mod test {
     use tracing_test::traced_test;
 
-    use super::client::{EnvConfig, NPClient};
-    use crate::better::currencies::Currency;
-    use crate::client::PaymentOpts;
+    use super::client::{Client, EnvConfig};
+    use crate::response::{Currency, Payment, Status};
 
-    fn client() -> NPClient {
+    use anyhow::Result;
+
+    fn client() -> Client {
         EnvConfig::client()
     }
 
-    fn sandbox_client() -> NPClient {
+    fn sandbox_client() -> Client {
         EnvConfig::sandbox_client()
     }
 
@@ -34,48 +32,52 @@ mod test {
     }
 
     #[tokio::test]
-    async fn get_status() {
+    async fn get_status() -> Result<()> {
         let mut c = client();
 
-        let status = c.status().await.unwrap();
+        let status = c.status().await?;
 
-        assert_eq!(status.message, "OK".to_string())
+        assert_eq!(status.message, "OK".to_string());
+        Ok(())
     }
 
     #[tokio::test]
     #[traced_test]
-    async fn get_currencies() {
+    async fn get_currencies() -> Result<()> {
         let mut c = client();
 
         // panics if not error
-        c.get_currencies().await.unwrap();
+        c.get_currencies().await?;
+        Ok(())
     }
 
     #[tokio::test]
     #[traced_test]
-    async fn get_full_currencies() {
+    async fn get_full_currencies() -> Result<()> {
         let mut c = client();
 
         // panics if not error
-        c.get_full_currencies().await.unwrap();
+        c.get_full_currencies().await?;
+        Ok(())
     }
 
     #[tokio::test]
-    async fn get_checked_currencies() {
+    async fn get_checked_currencies() -> Result<()> {
         let mut c = client();
 
         // panics if not error
         c.get_checked_currencies().await.unwrap();
+        Ok(())
     }
 
     #[tokio::test]
-    async fn get_min_payment_amount() {
+    async fn get_min_payment_amount() -> Result<()> {
         let mut c = client();
 
         // panics if not error
         c.get_min_payment_amount(Currency::ETH, Currency::BTC)
-            .await
-            .unwrap();
+            .await?;
+        Ok(())
     }
 
     #[tokio::test]
@@ -93,59 +95,52 @@ mod test {
     #[tokio::test]
     #[traced_test]
     // WARNING: Method does not work on sandbox.
-    async fn authentication() {
-        let mut c = client();
+    async fn authentication() -> Result<()> {
+        let mut client = client();
 
+        // Can be ignored because credentials already parsed from env.
         let config = EnvConfig::parse();
-        c.set_auth(config.email, config.password);
+        client
+            .auth()
+            .credentials()
+            .email(config.email)
+            .password(config.password);
 
-        // panics if not error
-        c.authenticate().await.unwrap();
-
-        // c.get_payout_list().await.unwrap();
+        // Request a JWT against the remote API.
+        client.auth().set().await?;
+        Ok(())
     }
 
     #[tokio::test]
     #[traced_test]
     // WARNING: Method does not work on sandbox.
-    async fn create_payment() {
-        let payment = PaymentOpts::builder()
-            .price_amount(100.0)
+    async fn create_payment() -> Result<()> {
+        let client = client();
+        client
+            .payment()
+            .create()
+            .amount(100.0)
             .price_currency(Currency::USD)
             .pay_currency(Currency::XMR)
             .order_id("my_order_0")
             .order_description("my test order")
             .ipn_callback_url("https://test.com/")
-            .build();
-
-        let mut c = client();
-        // let mut c = sandbox_client();
-
-        c.create_payment(payment).await.unwrap();
+            .post()
+            .await?;
+        Ok(())
     }
 
     #[tokio::test]
     #[traced_test]
     // WARNING: Method does not work on sandbox.
-    async fn get_payment() {
-        let ipn_callback = "https://test.com/";
-        let payment = PaymentOpts::builder()
-            .price_amount(100.0)
-            .price_currency(Currency::USD)
-            .pay_currency(Currency::XMR)
-            .order_id("my_order_0")
-            .order_description("my test order")
-            .ipn_callback_url("https://test.com/")
-            .build();
-
-        let mut c = client();
+    async fn get_payment() -> Result<()> {
+        let mut client = client();
 
         let config = EnvConfig::parse();
-        c.set_auth(config.email, config.password);
 
-        // panics if not error
-        c.authenticate().await.unwrap();
+        client.auth().set().await?;
+        client.payment().state().payment_id(1).get().await?;
 
-        c.get_payment(1).await.unwrap();
+        Ok(())
     }
 }
