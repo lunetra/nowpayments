@@ -74,8 +74,8 @@ mod test {
         client
             .currencies()
             .min_amount()
-            .from(Currency::ETH)
-            .to(Currency::BTC)
+            .from(&Currency::ETH)
+            .to(&Currency::BTC)
             .get()
             .await?;
         Ok(())

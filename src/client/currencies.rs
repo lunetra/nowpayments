@@ -67,7 +67,7 @@ impl CurrenciesMethods<'_> {
 
     // Get minimal payment amount.
     #[builder(finish_fn = get)]
-    pub async fn min_amount(&self, from: Currency, to: Currency) -> Result<MinPaymentAmount> {
+    pub async fn min_amount(&self, from: &Currency, to: &Currency) -> Result<MinPaymentAmount> {
         let path = format!(
             "min-amount?currency_from={}&currency_to={}",
             from.cg_id(),
