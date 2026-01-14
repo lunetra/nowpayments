@@ -188,8 +188,11 @@ impl MockPaymentMethods<'_> {
             address: format!("<mock/my_{:?}_address>", pay_currency.cg_id()),
             price_amount: Decimal::from_f64(amount).unwrap(),
             price_currency: price_currency.to_owned(),
-            pay_amount: Decimal::from_f64(amount).unwrap(),
+            pay_amount: Decimal::from_f64(amount / 500.0).unwrap(),
             pay_currency: pay_currency.to_owned(),
+
+            actually_paid: Some(Decimal::from_f64(amount / 1000.0).unwrap()),
+
             order_id: "".to_string(),
             order_description: "".to_string(),
             created_at: now,
