@@ -185,7 +185,7 @@ impl MockPaymentMethods<'_> {
         let mut payment = Payment {
             id: 0,
             status: Status::Unknown,
-            address: format!("<mock/my_{:?}_address>", pay_currency.cg_id()),
+            address: format!("<mock/my_{}_address>", pay_currency.network()),
             price_amount: Decimal::from_f64(amount).unwrap(),
             price_currency: price_currency.to_owned(),
             pay_amount: Decimal::from_f64(amount / 500.0).unwrap(),
