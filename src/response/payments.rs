@@ -45,13 +45,14 @@ pub struct MinPaymentAmount {
     pub currency_from: String,
     pub currency_to: String,
     pub min_amount: Decimal,
+    pub fiat_equivalent: Decimal,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EstimatedPaymentAmount {
     pub currency_from: String,
-    pub currency_to: String,
     pub amount_from: Decimal,
+    pub currency_to: String,
     pub estimated_amount: String,
 }
 
