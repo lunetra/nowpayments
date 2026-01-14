@@ -50,8 +50,8 @@ impl CurrenciesMethods<'_> {
     pub async fn price(
         &self,
         amount: f64,
-        from: Currency,
-        to: Currency,
+        from: &Currency,
+        to: &Currency,
     ) -> Result<EstimatedPaymentAmount> {
         let path = format!(
             "estimate?amount={}&currency_from={}&currency_to={}",
