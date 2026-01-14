@@ -42,17 +42,17 @@ impl FromStr for Status {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MinPaymentAmount {
-    currency_from: String,
-    currency_to: String,
-    min_amount: Decimal,
+    pub currency_from: String,
+    pub currency_to: String,
+    pub min_amount: Decimal,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct EstimatedPaymentAmount {
-    currency_from: String,
-    currency_to: String,
-    amount_from: Decimal,
-    estimated_amount: String,
+    pub currency_from: String,
+    pub currency_to: String,
+    pub amount_from: Decimal,
+    pub estimated_amount: String,
 }
 
 /// Response from the /create-payment endpoint
@@ -61,10 +61,14 @@ pub struct RawPayment {
     pub payment_id: String, // must contain numbers only (u64)
     pub payment_status: String,
     pub pay_address: String,
+
     pub price_amount: Decimal,
     pub price_currency: String,
     pub pay_amount: Decimal,
     pub pay_currency: String,
+
+    pub actually_paid: Option<Decimal>,
+
     pub order_id: String,
     pub order_description: String,
     pub purchase_id: String,
@@ -101,6 +105,8 @@ pub struct Payment {
     /// The transaction currency
     pub pay_currency: Currency,
 
+    pub actually_paid: Option<Decimal>,
+
     /// Extra informations.
     /// order_id should be: <account_uuid>-<currency>
     pub order_id: String,
@@ -123,6 +129,8 @@ impl From<RawPayment> for Payment {
             price_currency: Currency::from_str(&e.price_currency).unwrap(),
             pay_amount: e.pay_amount,
             pay_currency: Currency::from_str(&e.pay_currency).unwrap(),
+
+            actually_paid: e.actually_paid,
 
             order_id: e.order_id,
             order_description: e.order_description,
@@ -155,6 +163,8 @@ mod test {
             pay_amount: Decimal::from_f64(0.01).unwrap(),
             pay_currency: "xmr".to_string(),
 
+            actually_paid: Some(Decimal::from_f64(0.005).unwrap()),
+
             order_id: "test_id".to_string(),
             order_description: "my test".to_string(),
 
@@ -173,6 +183,8 @@ mod test {
             price_currency: Currency::USD,
             pay_amount: Decimal::from_f64(0.01).unwrap(),
             pay_currency: Currency::XMR,
+
+            actually_paid: Some(Decimal::from_f64(0.005).unwrap()),
 
             order_id: "test_id".to_string(),
             order_description: "my test".to_string(),
