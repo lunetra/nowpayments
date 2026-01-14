@@ -173,7 +173,7 @@ impl MockPaymentMethods<'_> {
     #[tracing::instrument(skip_all)]
 
     /// Create a payment.
-    pub async fn create(
+    pub fn create(
         &self,
         amount: f64,
         price_currency: &Currency,
