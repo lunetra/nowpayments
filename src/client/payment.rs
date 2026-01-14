@@ -184,7 +184,7 @@ impl MockPaymentMethods<'_> {
         let now: NaiveDateTime = Utc::now().naive_utc();
         let mut payment = Payment {
             id: 0,
-            status: Status::Unknown,
+            status: Status::Dummy,
             address: format!("<mock/my_{}_address>", pay_currency.network()),
             price_amount: Decimal::from_f64(amount).unwrap(),
             price_currency: price_currency.to_owned(),
