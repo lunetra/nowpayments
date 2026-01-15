@@ -129,8 +129,7 @@ mod test {
             .pay_currency(&Currency::XMR)
             .order_id("my_order_0")
             .order_description("my test order")
-            .post()
-            .await?;
+            .post()?;
         Ok(())
     }
 
