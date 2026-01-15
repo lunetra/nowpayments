@@ -122,7 +122,7 @@ client.payment().all().get().await?;
 ```
 
 ```rust
-// Get payment current state.
+// Get a payment current state.
 client
     .payment()
     .state()
@@ -131,7 +131,70 @@ client
     .await?;
 ```
 
+## Methods
+
+Check out the tests in `lib.rs` for helpful ways to use the client every method.
+
+- Create a new payment.
+
+```rust
+use nowpayments::Payment;
+
+let payment: Payment = client
+    .payment()
+    .create()
+    .amount(100.0)
+    .price_currency(&Currency::USD)
+    .pay_currency(&Currency::XMR)
+    .order_id("my_order_0")
+    .order_description("my test order")
+    .ipn_callback_url("https://test.com/")
+    .post()
+    .await?;
+```
+
+- Get a payment current state (by id).
+
+```rust
+use nowpayments::Payment;
+
+let payment: Payment = client
+    .payment()
+    .state()
+    .payment_id(1)
+    .get()
+    .await?;
+```
+
+- Currency price conversion at the current market rate.
+
+```rust
+use nowpayments::responses::EstimatedPaymentAmount;
+use nowpayments::Currency;
+
+let res: EstimatedPaymentAmount = client
+    .currency()
+    .price(10.0)
+    .from(Currency::USD)
+    .to(Currency::XMR)
+    .get()
+    .await?;
+```
+
+- Get currencies allowed by store.
+
+```rust
+use nowpayments::responses::EstimatedPaymentAmount;
+use nowpayments::Currency;
+
+let res: EstimatedPaymentAmount = client
+    .currency()
+    .allowed()
+    .get()
+    .await?;
+```
+
 ## ROADMAP/TODO
 
-[ ]: http(error): cast error into an enum for each http error status.
-[ ]: doc(methods): write API endpoint into each method description.
+- [ ] http(error): cast error into an enum for each http error status.
+- [ ] doc(methods): write API endpoint into each method description.

@@ -12,6 +12,14 @@ use rust_decimal::{prelude::FromPrimitive, Decimal};
 use std::collections::HashMap;
 
 use anyhow::{bail, Result};
+
+pub trait DefaultPaymentMethods {
+    fn create() -> Payment;
+    fn state() -> Payment;
+    // fn all() -> Vec<Payment>;
+    // fn one() -> Payment;
+}
+
 /// Just a convenience pattern so that,
 /// related methods are tidy under a common namespace.
 ///

@@ -1,94 +1,13 @@
-use super::Currency;
+mod methods;
+mod status;
+pub use status::Status;
 
-use chrono::NaiveDateTime;
+use crate::response::Currency;
+
+use chrono::{NaiveDateTime, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-
-#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
-pub enum Status {
-    #[default]
-    Unknown,
-    Dummy,
-    Waiting,
-    Confirming,
-    Confirmed,
-    Sending,
-    PartiallyPaid,
-    Finished,
-    Failed,
-    Refunded,
-    Expired,
-}
-impl FromStr for Status {
-    type Err = std::io::Error;
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        let res = match value {
-            "waiting" => Self::Waiting,
-            "confirming" => Self::Confirming,
-            "confirmed" => Self::Confirmed,
-            "sending" => Self::Sending,
-            "partially_paid" => Self::PartiallyPaid,
-            "finished" => Self::Finished,
-            "failed" => Self::Failed,
-            "refunded" => Self::Refunded,
-            "expired" => Self::Expired,
-            "dummy" => Self::Dummy,
-            _ => Self::Unknown,
-        };
-        Ok(res)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct MinPaymentAmount {
-    pub currency_from: String,
-    pub currency_to: String,
-    pub min_amount: Decimal,
-    pub fiat_equivalent: Decimal,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct EstimatedPaymentAmount {
-    pub currency_from: String,
-    pub amount_from: Decimal,
-    pub currency_to: String,
-    pub estimated_amount: String,
-}
-
-/// Response from the /create-payment endpoint
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct RawPayment {
-    pub payment_id: String, // must contain numbers only (u64)
-    pub payment_status: String,
-    pub pay_address: String,
-
-    pub price_amount: Decimal,
-    pub price_currency: String,
-    pub pay_amount: Decimal,
-    pub pay_currency: String,
-
-    pub actually_paid: Option<Decimal>,
-
-    pub order_id: String,
-    pub order_description: String,
-    pub purchase_id: String,
-    // Dates
-    pub created_at: String,
-    pub updated_at: String,
-}
-
-/// Response from the /create-payment endpoint
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct RawPayments {
-    data: Vec<RawPayment>,
-}
-impl From<RawPayments> for Vec<Payment> {
-    fn from(value: RawPayments) -> Self {
-        let res: Vec<Payment> = value.data.iter().map(|e| e.to_owned().into()).collect();
-        res
-    }
-}
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Payment {
@@ -141,6 +60,56 @@ impl From<RawPayment> for Payment {
             updated_at: NaiveDateTime::parse_from_str(&e.updated_at, "%Y-%m-%dT%H:%M:%S%.3fZ")
                 .unwrap(),
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MinPaymentAmount {
+    pub currency_from: String,
+    pub currency_to: String,
+    pub min_amount: Decimal,
+    pub fiat_equivalent: Decimal,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EstimatedPaymentAmount {
+    pub currency_from: String,
+    pub amount_from: Decimal,
+    pub currency_to: String,
+    pub estimated_amount: String,
+}
+
+/// Response from the /create-payment endpoint
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RawPayment {
+    pub payment_id: String, // must contain numbers only (u64)
+    pub payment_status: String,
+    pub pay_address: String,
+
+    pub price_amount: Decimal,
+    pub price_currency: String,
+    pub pay_amount: Decimal,
+    pub pay_currency: String,
+
+    pub actually_paid: Option<Decimal>,
+
+    pub order_id: String,
+    pub order_description: String,
+    pub purchase_id: String,
+    // Dates
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+/// Response from the /create-payment endpoint
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RawPayments {
+    data: Vec<RawPayment>,
+}
+impl From<RawPayments> for Vec<Payment> {
+    fn from(value: RawPayments) -> Self {
+        let res: Vec<Payment> = value.data.iter().map(|e| e.to_owned().into()).collect();
+        res
     }
 }
 

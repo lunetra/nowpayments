@@ -2,17 +2,17 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SingleConversion {
-    pub result: Result,
+    pub result: ConversionResult,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AllConversions {
-    pub result: Vec<Result>,
+    pub result: Vec<ConversionResult>,
     pub count: i64,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Result {
+pub struct ConversionResult {
     pub id: String,
     pub status: String,
     pub from_currency: String,
