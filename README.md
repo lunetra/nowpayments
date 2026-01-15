@@ -45,8 +45,15 @@ User/Developer wise this fork also added:
 
 ## Usage
 
-First set your environment variables in a `.env`
-based on the `.env.template`.
+Use in your project with cargo by adding the crate URL to your `Cargo.toml`.
+
+```toml
+# Cargo.toml
+nowpayments = { git = "https://github.com/pipelight/nowpayments" }
+```
+
+The set your environment variables in a `.env` file based on the `.env.template`,
+with your own credentials.
 
 ```env
 # Register at https://nowpayments.io/api to get your credentials.
@@ -63,7 +70,7 @@ NOWPAYMENTS_EMAIL=""
 NOWPAYMENTS_PASSWORD=""
 ```
 
-Create the client with your specific credentials.
+In your rust code, create the client with your specific credentials.
 
 ```rust
 // Set up the client from your env vars.
@@ -104,9 +111,7 @@ client
   .post()?
 ```
 
-Some methods,
-like seeing all your payments,
-need authentication.
+Some methods, like seeing all your payments, need authentication.
 
 ```rust
 // NowPayments Javascript Web Tokens (JWT) expire after 5 minutes,
@@ -126,7 +131,7 @@ client
     .await?;
 ```
 
-## TODO
+## ROADMAP/TODO
 
 [ ]: http(error): cast error into an enum for each http error status.
 [ ]: doc(methods): write API endpoint into each method description.
