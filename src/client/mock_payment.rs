@@ -37,6 +37,9 @@ impl MockPaymentMethods<'_> {
         pay_currency: &Currency,
         order_id: Option<&str>,
         order_description: Option<&str>,
+
+        status: Option<&Status>,
+        actually_paid: Option<f64>,
     ) -> Result<Payment> {
         let now: NaiveDateTime = Utc::now().naive_utc();
         let mut payment = Payment {
@@ -55,12 +58,21 @@ impl MockPaymentMethods<'_> {
             created_at: now,
             updated_at: now,
         };
+
         if let Some(order_id) = order_id {
             payment.order_id = order_id.to_string();
         }
         if let Some(order_description) = order_description {
             payment.order_description = order_description.to_string();
         }
+
+        if let Some(status) = status {
+            payment.status = status.to_owned();
+        }
+        if let Some(actually_paid) = actually_paid {
+            payment.actually_paid = Some(Decimal::from_f64(actually_paid).unwrap());
+        }
+
         Ok(payment)
     }
 }
