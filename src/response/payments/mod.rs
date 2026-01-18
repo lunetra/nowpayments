@@ -4,7 +4,7 @@ pub use status::Status;
 
 use crate::response::Currency;
 
-use chrono::{NaiveDateTime, Utc};
+use chrono::NaiveDateTime;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;

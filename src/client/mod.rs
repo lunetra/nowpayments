@@ -1,6 +1,7 @@
 mod auth;
 mod currencies;
 mod http;
+mod mock_payment;
 mod payment;
 mod payout;
 
