@@ -25,7 +25,10 @@ pub struct Payment {
     /// The transaction currency
     pub pay_currency: Currency,
 
+    /// Paid amount in currency from pay_amount(any crypto)
     pub actually_paid: Option<Decimal>,
+    /// Paid amount in currency from price_amount(usd)
+    pub actually_paid_price: Option<Decimal>,
 
     /// Extra informations.
     /// order_id should be: <account_uuid>-<currency>
@@ -51,6 +54,7 @@ impl From<RawPayment> for Payment {
             pay_currency: Currency::from_str(&e.pay_currency).unwrap(),
 
             actually_paid: e.actually_paid,
+            actually_paid_price: None,
 
             order_id: e.order_id,
             order_description: e.order_description,
@@ -155,6 +159,7 @@ mod test {
             pay_currency: Currency::XMR,
 
             actually_paid: Some(Decimal::from_f64(0.005).unwrap()),
+            actually_paid_price: None,
 
             order_id: "test_id".to_string(),
             order_description: "my test".to_string(),

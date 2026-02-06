@@ -1,6 +1,6 @@
 use super::Client;
 use crate::response::{
-    payments::{RawPayment, RawPayments},
+    payments::{EstimatedPaymentAmount, RawPayment, RawPayments},
     Currency, Payment, Status,
 };
 use chrono::{NaiveDateTime, Utc};
@@ -8,7 +8,10 @@ use convert_case::{Case, Casing};
 use std::fmt;
 
 use bon::bon;
-use rust_decimal::{prelude::FromPrimitive, Decimal};
+use rust_decimal::{
+    prelude::{FromPrimitive, FromStr, ToPrimitive},
+    Decimal,
+};
 use std::collections::HashMap;
 
 use anyhow::{bail, Result};
@@ -85,7 +88,25 @@ impl PaymentMethods<'_> {
         let path = format!("payment/{}", payment_id);
         let res: String = self.client.get(&path).await?;
         let payment: RawPayment = serde_json::from_str(res.as_str())?;
-        let payment: Payment = payment.into();
+        let mut payment: Payment = payment.into();
+
+        // When payment is over,
+        // Set paid amount to USD and persist.
+        #[cfg(debug_assertions)]
+        if payment.is_finished() {
+            if let Some(actually_paid) = payment.actually_paid {
+                let res: EstimatedPaymentAmount = client
+                    .currencies()
+                    .price()
+                    .amount(actually_paid.to_f64().unwrap())
+                    .from(&payment.pay_currency)
+                    .to(&payment.price_currency)
+                    .get()
+                    .await?;
+                payment.actually_paid_price = Some(Decimal::from_str(&res.estimated_amount)?);
+            }
+        }
+
         Ok(payment)
     }
     #[builder(finish_fn = get)]

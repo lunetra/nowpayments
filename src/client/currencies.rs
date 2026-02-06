@@ -56,8 +56,8 @@ impl CurrenciesMethods<'_> {
         let path = format!(
             "estimate?amount={}&currency_from={}&currency_to={}",
             Decimal::from_f64(amount).unwrap(),
-            from.cg_id(),
-            to.cg_id()
+            from.to_string().to_lowercase(),
+            to.to_string().to_lowercase()
         );
         let client = self.client;
         let req = client.get(&path).await?;
@@ -70,8 +70,8 @@ impl CurrenciesMethods<'_> {
     pub async fn min_amount(&self, from: &Currency, to: &Currency) -> Result<MinPaymentAmount> {
         let path = format!(
             "min-amount?currency_from={}&currency_to={}",
-            from.cg_id(),
-            to.cg_id()
+            from.to_string().to_lowercase(),
+            to.to_string().to_lowercase()
         );
         let client = self.client;
         let res = client.get(&path).await?;
