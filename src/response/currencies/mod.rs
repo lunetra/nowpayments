@@ -64,12 +64,12 @@ pub enum Currency {
     TRX,          // Tron
     BNBBSC,       // BNB (BSC)
     USDTBSC,      // USDT BEP20
-    USDTERC20,    // USDT ERC20
     USDTTRC20,    // USDT TRC20
     USDC,
 
     UNKNOWN,
 }
+
 impl fmt::Display for Currency {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
