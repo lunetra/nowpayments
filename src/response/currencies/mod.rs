@@ -61,6 +61,7 @@ pub enum Currency {
     BTC,
     // Fiat
     USD,
+    USDT,
     TRX,          // Tron
     BNBBSC,       // BNB (BSC)
     USDTBSC,      // USDT BEP20
