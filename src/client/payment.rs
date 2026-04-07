@@ -72,6 +72,7 @@ impl PaymentMethods<'_> {
         }
         let client = self.client;
         let res: String = client.post("payment", body).await?;
+        println!("NowPayments raw response: {}", res);
         let payment: RawPayment = serde_json::from_str(res.as_str())?;
         let payment: Payment = payment.into();
         Ok(payment)
