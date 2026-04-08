@@ -113,7 +113,7 @@ pub struct RawPayment {
     pub updated_at: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct Fee {
     pub currency: String,
     #[serde(rename = "depositeFee")]
