@@ -44,7 +44,7 @@ impl From<RawPayment> for Payment {
     /// Convert NowPayments Json API response to a convenient struct with methods.
     fn from(e: RawPayment) -> Self {
         Self {
-            id: e.payment_id.parse().unwrap(),
+            id: e.payment_id,
             status: Status::from_str(&e.payment_status).unwrap(),
             address: e.pay_address,
 
@@ -59,7 +59,7 @@ impl From<RawPayment> for Payment {
             order_id: e.order_id,
             order_description: e.order_description,
 
-            created_at: NaiveDateTime::parse_from_str(&e.created_at, "%Y-%m-%dT%H:%M:%S%.3fZ")
+            created_at: NaiveDateTime::parse_from_str(&e.created_at.unwrap(), "%Y-%m-%dT%H:%M:%S%.3fZ")
                 .unwrap(),
             updated_at: NaiveDateTime::parse_from_str(&e.updated_at, "%Y-%m-%dT%H:%M:%S%.3fZ")
                 .unwrap(),
