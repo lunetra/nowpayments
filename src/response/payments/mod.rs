@@ -98,12 +98,7 @@ pub struct RawPayment {
     pub actually_paid: Option<Decimal>,
     pub actually_paid_at_fiat: Option<Decimal>,
 
-    pub fee: Fee,
-    
-    pub invoice_id: Option<String>,
-    pub parent_payment_id: Option<u64>,
-    pub payin_extra_id: Option<String>,
-    pub payment_extra_ids: Option<serde_json::Value>,
+    pub fee: Option<Fee>,
 
     pub order_id: String,
     pub order_description: String,
