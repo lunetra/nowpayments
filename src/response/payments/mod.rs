@@ -44,7 +44,7 @@ impl From<RawPayment> for Payment {
     /// Convert NowPayments Json API response to a convenient struct with methods.
     fn from(e: RawPayment) -> Self {
         Self {
-            id: e.payment_id,
+            id: e.payment_id.parse().unwrap(),
             status: Status::from_str(&e.payment_status).unwrap(),
             address: e.pay_address,
 
@@ -59,7 +59,7 @@ impl From<RawPayment> for Payment {
             order_id: e.order_id,
             order_description: e.order_description,
 
-            created_at: NaiveDateTime::parse_from_str(&e.created_at.unwrap(), "%Y-%m-%dT%H:%M:%S%.3fZ")
+            created_at: NaiveDateTime::parse_from_str(&e.created_at, "%Y-%m-%dT%H:%M:%S%.3fZ")
                 .unwrap(),
             updated_at: NaiveDateTime::parse_from_str(&e.updated_at, "%Y-%m-%dT%H:%M:%S%.3fZ")
                 .unwrap(),
@@ -86,7 +86,7 @@ pub struct EstimatedPaymentAmount {
 /// Response from the /create-payment endpoint
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RawPayment {
-    pub payment_id: u64, // must contain numbers only (u64)
+    pub payment_id: String, // must contain numbers only (u64)
     pub payment_status: String,
     pub pay_address: String,
 
@@ -96,27 +96,13 @@ pub struct RawPayment {
     pub pay_currency: String,
 
     pub actually_paid: Option<Decimal>,
-    pub actually_paid_at_fiat: Option<Decimal>,
-
-    pub fee: Option<Fee>,
 
     pub order_id: String,
     pub order_description: String,
     pub purchase_id: String,
     // Dates
-    pub created_at: Option<String>,
+    pub created_at: String,
     pub updated_at: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
-pub struct Fee {
-    pub currency: String,
-    #[serde(rename = "depositeFee")]
-    pub deposit_fee: Decimal,
-    #[serde(rename = "serviceFee")]
-    pub service_fee: Decimal,
-    #[serde(rename = "withdrawalFee")]
-    pub withdrawal_fee: Decimal,
 }
 
 /// Response from the /create-payment endpoint
@@ -142,7 +128,7 @@ mod test {
     #[traced_test]
     fn convert() -> Result<()> {
         let api_res = RawPayment {
-            payment_id: 0,
+            payment_id: "0".to_string(),
             payment_status: "waiting".to_string(),
             pay_address: "my_fake_address".to_string(),
 
@@ -152,20 +138,13 @@ mod test {
             pay_currency: "xmr".to_string(),
 
             actually_paid: Some(Decimal::from_f64(0.005).unwrap()),
-            actually_paid_at_fiat: None,
-
-            fee: Fee::default(),
-            invoice_id: None,
-            parent_payment_id: None,
-            payin_extra_id: None,
-            payment_extra_ids: None,
 
             order_id: "test_id".to_string(),
             order_description: "my test".to_string(),
 
             purchase_id: "".to_string(),
 
-            created_at: Some("2026-01-10T17:56:15.327Z".to_string()),
+            created_at: "2026-01-10T17:56:15.327Z".to_string(),
             updated_at: "2026-01-10T17:56:15.327Z".to_string(),
         };
 
