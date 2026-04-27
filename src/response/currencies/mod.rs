@@ -99,7 +99,7 @@ impl Currency {
             Self::USDTERC20 => "Tether USD (ERC20)",
             Self::USDTTRC20 => "Tether USD (TRC20)",
             Self::USDTBSC => "Tether USD (BEP20)",
-            Self::TON => "Toncoin"
+            Self::TON => "Toncoin",
 
             Self::USD => "US Dollar",
 
