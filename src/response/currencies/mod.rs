@@ -98,6 +98,7 @@ impl Currency {
             Self::USDTERC20 => "Tether USD (ERC20)",
             Self::USDTTRC20 => "Tether USD (TRC20)",
             Self::USDTBSC => "Tether USD (BEP20)",
+            Self::TON => "Toncoin"
 
             Self::USD => "US Dollar",
 
@@ -122,6 +123,7 @@ impl Currency {
             Self::USDTERC20 => "tether",
             Self::USDTTRC20 => "tether",
             Self::USDTBSC => "tether",
+            Self::TON => "the-open-network",
 
             Self::USD => "usd",
 
@@ -147,6 +149,7 @@ impl Currency {
             Self::USDTERC20 => "eth",
             Self::USDTTRC20 => "trx",
             Self::USDTBSC => "bsc",
+            Self::TON => "ton",
 
             Self::USD => "fiat",
 
@@ -169,6 +172,7 @@ impl Currency {
             Self::USDTERC20 => "erc20",
             Self::USDTTRC20 => "trc20",
             Self::USDTBSC => "bep20",
+            Self::TON => "native",
 
             Self::USDCSOL => "spl",
             Self::USDC => "erc20", // default assumption
