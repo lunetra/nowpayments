@@ -67,6 +67,7 @@ pub enum Currency {
     USDTERC20,
     USDTTRC20,
     USDTBSC,
+    TON
 
     // Fiat
     USD,
